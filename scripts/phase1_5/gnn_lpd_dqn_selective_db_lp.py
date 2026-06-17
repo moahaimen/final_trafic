@@ -123,10 +123,12 @@ _WT_STUDENT_REF = (
     / "strict_full_mcf_reference_student.csv"
 )
 
-# ── GNN checkpoint default (from locked model dir in other worktree) ──────────
+# ── GNN checkpoint default: NEW DB-budgeted oracle trained model ─────────────
+# The old gnn_lp_distilled_selector.pt was trained on heuristic + full-MCF-min-MLU
+# labels — it does NOT satisfy the clean-method spec. Use the newly trained model.
 GNN_CHECKPOINT_DEFAULT = (
-    _LEGACY_WT / "results" / "phase1_5_incremental" / "lp_distilled_pr_gnn_kpaths8"
-    / "models" / "gnn_lp_distilled_selector.pt"
+    ROOT / "results" / "gnn_lpd_dqn_selective_db_lp" / "models"
+    / "gnn_dbbudget_selector.pt"
 )
 
 TRAIN_TOPOS = ["abilene", "cernet", "geant", "sprintlink", "tiscali", "ebone"]
@@ -190,55 +192,48 @@ DB_BUDGET_TARGET = {
     "tiscali":    0.050,
 }
 
-# ── Action space ─────────────────────────────────────────────────────────────
+# ── Action space — K30/K40/K50 family (mirrors report's observed budgets) ──────
+# No sticky, no REOPTIMIZE names, no RandomForest, no heuristic criticality.
 KEEP_PREVIOUS_ROUTING = 0
 ACTION_NAMES = {
-    0:  "KEEP_PREVIOUS_ROUTING",
-    1:  "OPTIMIZE_K_20_DB_0.01",
-    2:  "OPTIMIZE_K_20_DB_0.03",
-    3:  "OPTIMIZE_K_40_DB_0.01",
-    4:  "OPTIMIZE_K_40_DB_0.03",
-    5:  "OPTIMIZE_K_80_DB_0.01",
-    6:  "OPTIMIZE_K_80_DB_0.03",
-    7:  "OPTIMIZE_K_160_DB_0.01",
-    8:  "OPTIMIZE_K_160_DB_0.03",
-    9:  "OPTIMIZE_K_320_DB_0.01",
-    10: "OPTIMIZE_K_320_DB_0.03",
-    11: "FULL_OD_FALLBACK_PR_SAFE",
-    12: "FULL_OD_FALLBACK_LOW_MLU",
+    0: "KEEP_PREVIOUS_ROUTING",
+    1: "OPTIMIZE_K30_DB_0.01",
+    2: "OPTIMIZE_K30_DB_0.03",
+    3: "OPTIMIZE_K40_DB_0.01",
+    4: "OPTIMIZE_K40_DB_0.03",
+    5: "OPTIMIZE_K50_DB_0.01",
+    6: "OPTIMIZE_K50_DB_0.03",
+    7: "FULL_OD_FALLBACK_PR_SAFE",
+    8: "FULL_OD_FALLBACK_LOW_MLU",
 }
 # (kind, k_target, db_budget, db_weight)
 ACTION_CONFIG = {
-    0:  ("keep",     0,       0.0,  0.0),
-    1:  ("selected", 20,      0.01, 1e-6),
-    2:  ("selected", 20,      0.03, 1e-6),
-    3:  ("selected", 40,      0.01, 1e-6),
-    4:  ("selected", 40,      0.03, 1e-6),
-    5:  ("selected", 80,      0.01, 1e-6),
-    6:  ("selected", 80,      0.03, 1e-6),
-    7:  ("selected", 160,     0.01, 1e-6),
-    8:  ("selected", 160,     0.03, 1e-6),
-    9:  ("selected", 320,     0.01, 1e-6),
-    10: ("selected", 320,     0.03, 1e-6),
-    11: ("full",     10**9,   0.05, 1e-6),   # FULL_OD_FALLBACK_PR_SAFE
-    12: ("full",     10**9,   1.0,  1e-6),   # FULL_OD_FALLBACK_LOW_MLU
+    0: ("keep",     0,     0.0,  0.0),
+    1: ("selected", 30,    0.01, 1e-6),
+    2: ("selected", 30,    0.03, 1e-6),
+    3: ("selected", 40,    0.01, 1e-6),
+    4: ("selected", 40,    0.03, 1e-6),
+    5: ("selected", 50,    0.01, 1e-6),
+    6: ("selected", 50,    0.03, 1e-6),
+    7: ("full",     10**9, 0.05, 1e-6),   # FULL_OD_FALLBACK_PR_SAFE
+    8: ("full",     10**9, 1.0,  1e-6),   # FULL_OD_FALLBACK_LOW_MLU
 }
 N_ACTIONS = len(ACTION_CONFIG)
-FULL_OD_FALLBACK_PR_SAFE = 11
-FULL_OD_FALLBACK_LOW_MLU = 12
+FULL_OD_FALLBACK_PR_SAFE = 7
+FULL_OD_FALLBACK_LOW_MLU = 8
 
-# ── K escalation ─────────────────────────────────────────────────────────────
-K_CAP_ABSOLUTE = 640
-K_CAP_FRACTION = 0.25
+# ── K escalation — ladder: 30 → 40 → 50 → full-OD fallback ──────────────────
+K_CAP_ABSOLUTE = 50    # never select more than 50 ODs before full-OD fallback
+K_CAP_FRACTION = 0.25  # cap at 25% of active ODs (so k_cap=50 even for large topos)
 K_LADDER = {
-    "abilene":       [20, 40, 80, 120],
-    "cernet":        [40, 80, 160, 320, 640],
-    "geant":         [40, 80, 160, 320],
-    "sprintlink":    [40, 80, 160, 320],
-    "tiscali":       [40, 80, 160, 320],
-    "ebone":         [40, 80, 160, 320],
-    "germany50":     [40, 80, 160, 320],
-    "vtlwavenet2011":[40, 80, 160, 320],
+    "abilene":        [30, 40, 50],
+    "cernet":         [30, 40, 50],
+    "geant":          [30, 40, 50],
+    "sprintlink":     [30, 40, 50],
+    "tiscali":        [30, 40, 50],
+    "ebone":          [30, 40, 50],
+    "germany50":      [30, 40, 50],
+    "vtlwavenet2011": [30, 40, 50],
 }
 
 
@@ -792,7 +787,8 @@ class SelectiveRoutingEnv:
 
 
 # ── State dimension ───────────────────────────────────────────────────────────
-STATE_DIM = len(STATE_TOPOS) + N_ACTIONS + 14
+# 8 topology one-hot + 9 action one-hot + 14 misc features
+STATE_DIM = len(STATE_TOPOS) + N_ACTIONS + 14  # = 8 + 9 + 14 = 31
 
 
 # ── Evaluation ────────────────────────────────────────────────────────────────
