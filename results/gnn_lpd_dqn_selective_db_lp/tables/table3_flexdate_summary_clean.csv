@@ -1,0 +1,6 @@
+Topology,N,Mean PR (%),PR>=0.95 (%),PR>=0.90 (%),Min PR (%),Mean DB (%),P95 DB (%),P50 ms,P95 ms,Full-OD fallback (%),Scope
+abilene,2016,99.669,100.0,100.0,96.038,0.613,1.111,6.7,7.2,2.3,FlexDATE subset
+cernet,200,99.42,100.0,100.0,97.721,0.321,0.184,25.7,29.0,1.5,FlexDATE subset
+geant,672,99.984,100.0,100.0,99.621,0.378,0.75,13.6,15.3,3.1,FlexDATE subset
+sprintlink,200,100.0,100.0,100.0,100.0,0.471,0.29,32.2,1082.2,11.5,FlexDATE subset
+Weighted subset total,3088,99.743,100.0,100.0,96.038,0.533,1.0,6.8,32.0,3.0,FlexDATE pooled
