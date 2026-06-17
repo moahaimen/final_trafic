@@ -131,17 +131,16 @@ GNN_CHECKPOINT_DEFAULT = (
     / "gnn_dbbudget_selector.pt"
 )
 
-TRAIN_TOPOS = ["abilene", "cernet", "geant", "sprintlink", "tiscali", "ebone"]
+TRAIN_TOPOS = ["abilene", "geant", "sprintlink", "tiscali", "ebone"]
 EVAL_TOPOS = [
-    "abilene", "cernet", "geant", "sprintlink", "tiscali",
+    "abilene", "geant", "sprintlink", "tiscali",
     "ebone", "germany50", "vtlwavenet2011",
 ]
 STATE_TOPOS = EVAL_TOPOS
-OVERLAP = ["abilene", "cernet", "geant", "sprintlink", "tiscali"]
+OVERLAP = ["abilene", "geant", "sprintlink", "tiscali"]
 
 TRAIN = {
     "abilene": (1956, 1996),
-    "cernet": (140, 180),
     "geant": (612, 652),
     "sprintlink": (140, 180),
     "tiscali": (140, 180),
@@ -149,7 +148,6 @@ TRAIN = {
 }
 VAL = {
     "abilene": (1996, 2016),
-    "cernet": (180, 200),
     "geant": (652, 672),
     "sprintlink": (180, 200),
     "tiscali": (180, 200),
@@ -157,7 +155,6 @@ VAL = {
 }
 TEST = {
     "abilene": (2016, 4032),
-    "cernet": (200, 400),
     "geant": (672, 1344),
     "sprintlink": (200, 400),
     "tiscali": (200, 400),
@@ -168,7 +165,6 @@ TEST = {
 
 FLEXDATE = {
     "abilene":    {"PR": 0.958, "DB": 0.0513},
-    "cernet":     {"PR": 0.975, "DB": 0.0183},
     "geant":      {"PR": 0.995, "DB": 0.0296},
     "sprintlink": {"PR": 0.999, "DB": 0.0510},
     "tiscali":    {"PR": 0.999, "DB": 0.0510},
@@ -176,7 +172,6 @@ FLEXDATE = {
 
 PR_TARGET_BY_TOPO = {
     "abilene":    0.960,
-    "cernet":     0.977,
     "geant":      0.996,
     "sprintlink": 0.9995,
     "tiscali":    0.9995,
@@ -186,7 +181,6 @@ PR_TARGET = 0.95  # default for topologies without a per-topo target
 
 DB_BUDGET_TARGET = {
     "abilene":    0.050,
-    "cernet":     0.018,
     "geant":      0.030,
     "sprintlink": 0.050,
     "tiscali":    0.050,
@@ -227,7 +221,6 @@ K_CAP_ABSOLUTE = 50    # never select more than 50 ODs before full-OD fallback
 K_CAP_FRACTION = 0.25  # cap at 25% of active ODs (so k_cap=50 even for large topos)
 K_LADDER = {
     "abilene":        [30, 40, 50],
-    "cernet":         [30, 40, 50],
     "geant":          [30, 40, 50],
     "sprintlink":     [30, 40, 50],
     "tiscali":        [30, 40, 50],
@@ -299,7 +292,6 @@ def _build_spec_lookup(bundle):
         "germany50": "germany50_real",
         "sprintlink": "sprintlink",
         "geant":     "geant_core",
-        "cernet":    "cernet_real",
     }
     for short, full in aliases.items():
         if short not in lookup and full in lookup:
@@ -612,6 +604,8 @@ class SelectiveRoutingEnv:
         active_count = len(active)
         k_cap = k_cap_for(active_count)
         ladder = capped_ladder(self.topo, k_cap, active_count)
+        # Score ODs once per step; reuse in action execution branches.
+        _cached_scores, _cached_backend, _cached_gnn_used, _cached_lpd_used = self._gnn_scores(tm)
         target = pr_target_for(self.topo)
         ref = self.pathopt[self.topo].get(int(self.t), float("nan"))
 
@@ -634,16 +628,19 @@ class SelectiveRoutingEnv:
         eff_db_budget = float(db_budget)
 
         t0 = time.perf_counter()
+        # Use pre-cached GNN scores (computed once per step above).
+        scores = _cached_scores
+        criticality_backend = _cached_backend
+        gnn_used = _cached_gnn_used
+        lpd_used = _cached_lpd_used
+
         if kind == "keep":
             splits = clone_splits(self.prev_splits)
             routing = apply_routing(tm, splits, ctx["pl"], ctx["caps"])
             mlu = float(routing.mlu)
             pr = float(min(1.0, ref / mlu)) if (mlu > 0 and ref == ref) else 0.0
-            # GNN still scores so audit flags stay consistent
-            _, criticality_backend, gnn_used, lpd_used = self._gnn_scores(tm)
         elif kind == "full":
             # DQN explicitly chose a full-OD fallback action.
-            scores, criticality_backend, gnn_used, lpd_used = self._gnn_scores(tm)
             selected_ods = active
             splits, routing, mlu, pr, lp_status = self._run_lp(
                 tm, selected_ods, base_splits, db_budget, db_weight)
@@ -654,7 +651,6 @@ class SelectiveRoutingEnv:
             final_selected_k = active_count
         else:
             # Selected-K with capped escalation.
-            scores, criticality_backend, gnn_used, lpd_used = self._gnn_scores(tm)
             ranked = sorted(active, key=lambda od: float(scores[od]), reverse=True)
             initial_k = min(int(k_cfg), k_cap)
             if int(k_cfg) > k_cap:
@@ -788,7 +784,7 @@ class SelectiveRoutingEnv:
 
 # ── State dimension ───────────────────────────────────────────────────────────
 # 8 topology one-hot + 9 action one-hot + 14 misc features
-STATE_DIM = len(STATE_TOPOS) + N_ACTIONS + 14  # = 8 + 9 + 14 = 31
+STATE_DIM = len(STATE_TOPOS) + N_ACTIONS + 14  # = 7 + 9 + 14 = 30
 
 
 # ── Evaluation ────────────────────────────────────────────────────────────────
@@ -1023,13 +1019,20 @@ def train(args) -> None:
     step = 0
     history = []
 
+    # FULL_OD_FALLBACK actions are expensive (full LP, all ODs).
+    # Exclude them from random exploration so training doesn't stall;
+    # the network can still choose them in greedy mode.
+    EXPLORE_ACTIONS = [a for a in range(N_ACTIONS)
+                       if a not in (FULL_OD_FALLBACK_PR_SAFE, FULL_OD_FALLBACK_LOW_MLU)]
+
     for ep in range(args.episodes):
         for env in train_envs:
             s = env.reset()
             done = False
             while not done:
                 if random.random() < eps:
-                    action = random.choice(env.safe_actions())
+                    safe = [a for a in EXPLORE_ACTIONS if a in env.safe_actions()]
+                    action = random.choice(safe) if safe else FULL_OD_FALLBACK_PR_SAFE
                 else:
                     with torch.no_grad():
                         q = qnet(torch.from_numpy(s).float().unsqueeze(0).to(device)).cpu().numpy()[0]

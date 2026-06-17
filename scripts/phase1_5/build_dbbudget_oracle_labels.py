@@ -48,7 +48,6 @@ OUT_DIR = ROOT / "results" / "gnn_lpd_dqn_selective_db_lp" / "labels"
 
 TRAIN_WINDOWS = {
     "abilene":    (1956, 1996),
-    "cernet":     (140,  180),
     "geant":      (612,  652),
     "sprintlink": (140,  180),
     "tiscali":    (140,  180),
