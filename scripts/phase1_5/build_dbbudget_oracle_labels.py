@@ -48,6 +48,7 @@ OUT_DIR = ROOT / "results" / "gnn_lpd_dqn_selective_db_lp" / "labels"
 
 TRAIN_WINDOWS = {
     "abilene":    (1956, 1996),
+    "cernet":     (140,  180),
     "geant":      (612,  652),
     "sprintlink": (140,  180),
     "tiscali":    (140,  180),
@@ -209,14 +210,19 @@ def main():
     ap.add_argument("--db_budget", type=float, default=ORACLE_DB_BUDGET)
     ap.add_argument("--time_limit", type=int, default=ORACLE_TIME_LIMIT)
     ap.add_argument("--out_dir", default=str(OUT_DIR))
+    ap.add_argument("--out_file", default=None,
+                    help="Override output CSV path (default: <out_dir>/oracle_labels.csv)")
+    ap.add_argument("--max_cycles", type=int, default=None,
+                    help="Cap cycles per topology (for smoke tests; overrides --smoke)")
     ap.add_argument("--smoke", action="store_true",
                     help="Quick smoke: 4 cycles per topology only")
     args = ap.parse_args()
 
     out = Path(args.out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    checkpoint = out / "oracle_labels_checkpoint.csv"
-    final_csv = out / "oracle_labels.csv"
+    final_csv = Path(args.out_file) if args.out_file else out / "oracle_labels.csv"
+    # Use a checkpoint named after the output file stem to avoid cross-run collisions
+    checkpoint = final_csv.parent / (final_csv.stem + "_checkpoint.csv")
 
     print(f"[oracle-labels] DB budget = {args.db_budget}")
     print(f"[oracle-labels] LP time limit = {args.time_limit}s per cycle")
@@ -244,7 +250,9 @@ def main():
             print(f"[oracle-labels] WARNING: {topo} not in spec lookup, skipping.")
             continue
         lo, hi = TRAIN_WINDOWS[topo]
-        if args.smoke:
+        if args.max_cycles is not None:
+            hi = min(lo + args.max_cycles, hi)
+        elif args.smoke:
             hi = min(lo + 4, hi)
         print(f"\n[oracle-labels] Processing {topo}: cycles {lo}–{hi-1}")
         rows = process_topology(topo, bundle, lookup, lo, hi,

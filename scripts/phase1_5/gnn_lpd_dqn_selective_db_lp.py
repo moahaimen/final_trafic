@@ -131,47 +131,52 @@ GNN_CHECKPOINT_DEFAULT = (
     / "gnn_dbbudget_selector.pt"
 )
 
-TRAIN_TOPOS = ["abilene", "geant", "sprintlink", "tiscali", "ebone"]
+TRAIN_TOPOS = ["abilene", "cernet", "geant", "sprintlink", "tiscali", "ebone"]
 EVAL_TOPOS = [
-    "abilene", "geant", "sprintlink", "tiscali",
+    "abilene", "cernet", "geant", "sprintlink", "tiscali",
     "ebone", "germany50", "vtlwavenet2011",
 ]
 STATE_TOPOS = EVAL_TOPOS
-OVERLAP = ["abilene", "geant", "sprintlink", "tiscali"]
+# Direct FlexDATE comparison subset: Abilene, CERNET, GEANT, Sprintlink
+FLEXDATE_TOPOS = ["abilene", "cernet", "geant", "sprintlink"]
 
 TRAIN = {
-    "abilene": (1956, 1996),
-    "geant": (612, 652),
-    "sprintlink": (140, 180),
-    "tiscali": (140, 180),
-    "ebone": (140, 180),
+    "abilene":    (1956, 1996),
+    "cernet":     (140,  180),
+    "geant":      (612,  652),
+    "sprintlink": (140,  180),
+    "tiscali":    (140,  180),
+    "ebone":      (140,  180),
 }
 VAL = {
-    "abilene": (1996, 2016),
-    "geant": (652, 672),
-    "sprintlink": (180, 200),
-    "tiscali": (180, 200),
-    "ebone": (180, 200),
+    "abilene":    (1996, 2016),
+    "cernet":     (180,  200),
+    "geant":      (652,  672),
+    "sprintlink": (180,  200),
+    "tiscali":    (180,  200),
+    "ebone":      (180,  200),
 }
 TEST = {
-    "abilene": (2016, 4032),
-    "geant": (672, 1344),
-    "sprintlink": (200, 400),
-    "tiscali": (200, 400),
-    "ebone": (200, 400),
-    "germany50": (0, 288),
-    "vtlwavenet2011": (0, 200),
+    "abilene":        (2016, 4032),
+    "cernet":         (200,  400),
+    "geant":          (672,  1344),
+    "sprintlink":     (200,  400),
+    "tiscali":        (200,  400),
+    "ebone":          (200,  400),
+    "germany50":      (0,    288),
+    "vtlwavenet2011": (0,    200),
 }
 
 FLEXDATE = {
     "abilene":    {"PR": 0.958, "DB": 0.0513},
+    "cernet":     {"PR": 0.975, "DB": 0.0183},
     "geant":      {"PR": 0.995, "DB": 0.0296},
     "sprintlink": {"PR": 0.999, "DB": 0.0510},
-    "tiscali":    {"PR": 0.999, "DB": 0.0510},
 }
 
 PR_TARGET_BY_TOPO = {
     "abilene":    0.960,
+    "cernet":     0.977,
     "geant":      0.996,
     "sprintlink": 0.9995,
     "tiscali":    0.9995,
@@ -181,6 +186,7 @@ PR_TARGET = 0.95  # default for topologies without a per-topo target
 
 DB_BUDGET_TARGET = {
     "abilene":    0.050,
+    "cernet":     0.018,
     "geant":      0.030,
     "sprintlink": 0.050,
     "tiscali":    0.050,
@@ -221,6 +227,7 @@ K_CAP_ABSOLUTE = 50    # never select more than 50 ODs before full-OD fallback
 K_CAP_FRACTION = 0.25  # cap at 25% of active ODs (so k_cap=50 even for large topos)
 K_LADDER = {
     "abilene":        [30, 40, 50],
+    "cernet":         [30, 40, 50],
     "geant":          [30, 40, 50],
     "sprintlink":     [30, 40, 50],
     "tiscali":        [30, 40, 50],
@@ -289,6 +296,7 @@ def _build_spec_lookup(bundle):
                 lookup[k] = s
     aliases = {
         "abilene":   "abilene_backbone",
+        "cernet":    "cernet_real",
         "germany50": "germany50_real",
         "sprintlink": "sprintlink",
         "geant":     "geant_core",
@@ -784,7 +792,7 @@ class SelectiveRoutingEnv:
 
 # ── State dimension ───────────────────────────────────────────────────────────
 # 8 topology one-hot + 9 action one-hot + 14 misc features
-STATE_DIM = len(STATE_TOPOS) + N_ACTIONS + 14  # = 7 + 9 + 14 = 30
+STATE_DIM = len(STATE_TOPOS) + N_ACTIONS + 14  # = 8 + 9 + 14 = 31
 
 
 # ── Evaluation ────────────────────────────────────────────────────────────────
@@ -936,6 +944,8 @@ def _summarize(df: pd.DataFrame, out_dir: Path, tag: str) -> dict:
         })
     summary_df = pd.DataFrame(rows)
     summary_df.to_csv(out_dir / f"{tag}_summary.csv", index=False)
+    # Canonical name (no tag prefix) for artifact references
+    summary_df.to_csv(out_dir / "per_topology_summary.csv", index=False)
 
     pooled: dict = {
         "method":               METHOD,
@@ -952,6 +962,9 @@ def _summarize(df: pd.DataFrame, out_dir: Path, tag: str) -> dict:
         "heuristic_used_rate":  0.0,
     }
     (out_dir / f"{tag}_overall.json").write_text(json.dumps(pooled, indent=2))
+    # Canonical names for artifact references
+    (out_dir / "overall.json").write_text(json.dumps(pooled, indent=2))
+    df.to_csv(out_dir / "per_cycle.csv", index=False)
     return pooled
 
 

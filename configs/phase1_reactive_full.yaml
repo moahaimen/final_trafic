@@ -29,6 +29,7 @@ experiment:
     - tiscali
   generalization_topologies:
     - germany50_real
+    - cernet_real
   methods:
     - ospf
     - ecmp
