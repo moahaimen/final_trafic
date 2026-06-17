@@ -1,14 +1,14 @@
-Field,Value
-Method,gnn_lpd_dqn_selective_db_lp
-GNN used,1
-LPD used,1
-Criticality backend,gnn_lpd
-Heuristic used,0
-DQN used,1
-Selected OD LP used,1
-Stage-2 used,0
-Disturbance finalization,0
-RandomForest gate used,0
-Sticky gate used,0
-Audit blocks passed,10/10
-Audit result,PASS
+Field,Value,Compliant
+Method,gnn_lpd_dqn_selective_db_lp,—
+GNN used,1 (every row),YES
+LPD used,1 (every row),YES
+Criticality backend,gnn_lpd,YES
+Heuristic used,0,YES
+DQN used,1 (every row),YES
+Selected OD LP used,1 (every row),YES
+Stage-2 used,0,YES
+Disturbance finalization used,0,YES
+RandomForest gate used,0,YES
+Sticky gate used,0,YES
+Audit blocks passed,10/10,YES
+Audit result,PASS,ALL CLEAR
