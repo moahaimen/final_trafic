@@ -22,6 +22,11 @@ Traffic matrix + topology
 Excluded by design and verified by the compliance audit: heuristic criticality,
 RandomForest gate, sticky-gate reuse, Stage-2 DB LP, disturbance-finalization LP.
 
+The GNN input may include demand-normalized path-cost and bottleneck-utilization
+descriptors as neutral traffic/topology features. These descriptors are not FlexDATE,
+are not a baseline method, and are not used as a standalone heuristic selector.
+Final OD selection is produced by the trained DB-budgeted-oracle GNN-LPD selector.
+
 ## First-run command (Windows)
 
 After cloning, from the repository root:

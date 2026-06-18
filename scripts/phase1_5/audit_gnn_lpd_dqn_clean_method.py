@@ -289,9 +289,37 @@ def main():
                 print(f"    OK  '{token}' not active in clean method script")
 
     # ------------------------------------------------------------------
-    # BLOCK 9: Hardcoded-result check
+    # BLOCK 9: flexdate_score naming check — must not appear in clean method
     # ------------------------------------------------------------------
-    print("\n[9] Hardcoded-result check...")
+    print("\n[9] Checking for forbidden flexdate_score naming in clean method script...")
+    if CLEAN_METHOD_SCRIPT.exists():
+        src = CLEAN_METHOD_SCRIPT.read_text()
+        # These patterns must never appear as internal score/feature names
+        naming_forbidden = ["flexdate_score", "flexdate_scores", "flexdate_norm", "w_flexdate"]
+        for token in naming_forbidden:
+            hits = [
+                (i + 1, line.strip())
+                for i, line in enumerate(src.splitlines())
+                if token in line
+                and not line.strip().startswith("#")
+            ]
+            if hits:
+                for lineno, line in hits[:3]:
+                    failures.append(
+                        f"Forbidden internal naming '{token}' at line {lineno}: {line[:100]}"
+                    )
+            else:
+                print(f"    OK  '{token}' absent from clean method script")
+        # Verify final OD selection comes from gnn_lpd, not path-cost/bottleneck rank
+        if "criticality_backend" not in src or "gnn_lpd" not in src:
+            failures.append("Clean method script does not reference criticality_backend=gnn_lpd")
+        else:
+            print("    OK  criticality_backend=gnn_lpd present in clean method script")
+
+    # ------------------------------------------------------------------
+    # BLOCK 10: Hardcoded-result check
+    # ------------------------------------------------------------------
+    print("\n[10] Hardcoded-result check...")
     audit_ckpt = audit.get("gnn_checkpoint", "")
     if not audit_ckpt:
         failures.append("method_audit.json missing 'gnn_checkpoint' — possible hardcoded results.")
@@ -305,9 +333,9 @@ def main():
         print(f"    OK  per-cycle rows: {len(df)}")
 
     # ------------------------------------------------------------------
-    # BLOCK 10: FlexDATE comparison
+    # BLOCK 11: FlexDATE comparison
     # ------------------------------------------------------------------
-    print("\n[10] FlexDATE comparison (target topologies)...")
+    print("\n[11] FlexDATE comparison (target topologies)...")
     TARGET_TOPOS = ["abilene", "cernet", "geant", "sprintlink"]
     for topo in TARGET_TOPOS:
         g = df[df["topology"] == topo]
