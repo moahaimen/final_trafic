@@ -114,14 +114,14 @@ internal / runtime-limitation row rather than as a FlexDATE win/loss.
 
 **Table 3. Final-method summary on the main comparison subset (N = 3,288)**
 
-| Topology | N | Mean PR | PR≥0.95 | PR≥0.90 | Min PR | Mean DB | P95 DB | P50 ms | P95 ms | Full-OD% | Scope |
+| Topology | N | Mean PR | PR≥0.95 | PR≥0.90 | Min PR | Mean DB | P95 DB | Mean ms | P95 ms | Full-OD% | Scope |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Abilene | 2,016 | 99.669% | 100.000% | 100.000% | 96.038% | 0.613% | 1.111% | 6.7 | 7.2 | 2.3% | Main subset |
-| CERNET | 200 | 99.420% | 100.000% | 100.000% | 97.721% | 0.321% | 0.184% | 25.7 | 29.0 | 1.5% | Main subset |
-| GEANT | 672 | 99.984% | 100.000% | 100.000% | 99.621% | 0.378% | 0.750% | 13.6 | 15.3 | 3.1% | Main subset |
-| Sprintlink | 200 | 100.000% | 100.000% | 100.000% | 100.000% | 0.471% | 0.290% | 32.2 | 1,082.2 | 11.5% | Main subset |
-| Tiscali | 200 | 100.000% | 100.000% | 100.000% | 99.950% | 0.714% | 1.212% | 4,297.6 | 9,255.5 | 81.5% | Main subset / runtime limitation |
-| **Weighted (N=3,288)** | **3,288** | **99.758%** | **100.000%** | **100.000%** | **96.038%** | **0.544%** | **1.000%** | **6.9** | **1,252.4** | **7.8%** | **Main subset pooled** |
+| Abilene | 2,016 | 99.669% | 100.000% | 100.000% | 96.038% | 0.613% | 1.111% | 7.1 | 7.2 | 2.3% | Main subset |
+| CERNET | 200 | 99.420% | 100.000% | 100.000% | 97.721% | 0.321% | 0.184% | 23.3 | 29.0 | 1.5% | Main subset |
+| GEANT | 672 | 99.984% | 100.000% | 100.000% | 99.621% | 0.378% | 0.750% | 18.9 | 15.3 | 3.1% | Main subset |
+| Sprintlink | 200 | 100.000% | 100.000% | 100.000% | 100.000% | 0.471% | 0.290% | 155.5 | 1,082.2 | 11.5% | Main subset |
+| Tiscali | 200 | 100.000% | 100.000% | 100.000% | 99.950% | 0.714% | 1.212% | 4,340.4 | 9,255.5 | 81.5% | Main subset / runtime limitation |
+| **Weighted (N=3,288)** | **3,288** | **99.758%** | **100.000%** | **100.000%** | **96.038%** | **0.544%** | **1.000%** | **283.1** | **1,252.4** | **7.8%** | **Main subset pooled** |
 
 > Weighted pooled rows computed directly from `per_cycle.csv` filtered to the five main-subset
 > topologies (N=3,288), not by averaging table rows. P95 ms of 1,252.4 ms is dominated by
