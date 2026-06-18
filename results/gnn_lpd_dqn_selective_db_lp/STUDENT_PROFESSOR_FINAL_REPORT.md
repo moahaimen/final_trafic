@@ -5,8 +5,11 @@
 ---
 
 > **Source-scope lock:** Tiscali is included in the main N = 3,288 comparison subset and in all CDF
-> plots. A locked FlexDATE reference for Tiscali exists in the audit script
-> (`tiscali: PR=0.999, DB=0.0510`). Tiscali PR and DB both WIN vs FlexDATE; runtime is the limitation.
+> plots. However, **no source-locked FlexDATE reference row for Tiscali exists in the original report.**
+> The audit-script constants are method-internal configuration, not valid FlexDATE source evidence.
+> Tiscali is therefore reported as an internal / runtime-limitation row and is **not** claimed as a
+> FlexDATE win/loss. The four topologies with a genuine source-locked FlexDATE reference
+> (Abilene, CERNET, GEANT, Sprintlink) win both PR and DB.
 > Full N = 3,976 internal benchmark results are reported separately and are not used to establish
 > the main comparison claim.
 
@@ -78,9 +81,10 @@ The reported clean run uses:
 ## Section 2 — Main Comparison Table
 
 **Comparison scope:** Main comparison subset is N = 3,288 over five topologies: Abilene, CERNET,
-GEANT, Sprintlink, and Tiscali. A locked FlexDATE reference for Tiscali exists in the audit
-script (`tiscali: {"PR": 0.999, "DB": 0.0510}`). Our Tiscali PR = 100.000% > 99.900% (WIN);
-our DB = 0.714% < 5.100% (WIN). PR and DB both win; runtime is a known limitation.
+GEANT, Sprintlink, and Tiscali. **Only four of these (Abilene, CERNET, GEANT, Sprintlink) have a
+source-locked FlexDATE reference row in the original report.** Tiscali has no source-locked
+FlexDATE reference row, so its FlexDATE columns are marked N.A. and it is reported as an
+internal / runtime-limitation row rather than as a FlexDATE win/loss.
 
 **Table 2. Main comparison subset including Tiscali (N = 3,288)**
 
@@ -90,14 +94,16 @@ our DB = 0.714% < 5.100% (WIN). PR and DB both win; runtime is a known limitatio
 | CERNET | 200 | 99.420% | 97.500% | WIN | 0.321% | 1.830% | WIN | WIN BOTH | 100.000% | 97.721% | 29.0 |
 | GEANT | 672 | 99.984% | 99.500% | WIN | 0.378% | 2.960% | WIN | WIN BOTH | 100.000% | 99.621% | 15.3 |
 | Sprintlink | 200 | 100.000% | 99.900% | WIN | 0.471% | 5.100% | WIN | WIN BOTH | 100.000% | 100.000% | 1,082.2 |
-| Tiscali | 200 | 100.000% | 99.900% | WIN | 0.714% | 5.100% | WIN | WIN BOTH (runtime limitation) | 100.000% | 99.950% | 9,255.5 |
-| **Weighted (N=3,288)** | **3,288** | **99.758%** | — | — | **0.544%** | — | — | **5/5 WIN BOTH** | **100.000%** | **96.038%** | **1,252.4** |
+| Tiscali | 200 | 100.000% | N.A. | n/c | 0.714% | N.A. | n/c | reported / runtime limitation | 100.000% | 99.950% | 9,255.5 |
+| **Weighted (N=3,288)** | **3,288** | **99.758%** | — | — | **0.544%** | — | — | **4/4 FlexDATE-reference topologies WIN BOTH + Tiscali internal/runtime limitation** | **100.000%** | **96.038%** | **1,252.4** |
 
-> Tiscali FlexDATE reference confirmed in `scripts/phase1_5/audit_gnn_lpd_dqn_clean_method.py`:
-> `tiscali: {"PR": 0.999, "DB": 0.0510}`. Our results: PR=100.000% > 99.900% (WIN),
-> DB=0.714% < 5.100% (WIN). All five topologies win both PR and DB. The Tiscali runtime is
-> a limitation: 81.5% full-OD fallback, mean 4,340 ms, P95 9,255 ms; PR and DB quality
-> are excellent.
+> Tiscali has **no source-locked FlexDATE reference row** in the original report. The
+> `tiscali` constant in `scripts/phase1_5/audit_gnn_lpd_dqn_clean_method.py` is method-internal
+> audit configuration, **not** valid FlexDATE source evidence, and is not used to claim a win/loss.
+> Tiscali FlexDATE PR/DB are therefore N.A. and its PR/DB results are not computable (n/c).
+> The four FlexDATE-reference topologies (Abilene, CERNET, GEANT, Sprintlink) win both PR and DB.
+> Tiscali's own PR=100.000% and DB=0.714% are strong internal results, but its runtime is a
+> limitation: 81.5% full-OD fallback, mean 4,340 ms, P95 9,255 ms.
 >
 > Sprintlink P95 exceeds 500 ms due to safety full-OD fallback on 11.5% of cycles;
 > mean decision time is 155.5 ms.
@@ -325,6 +331,12 @@ our DB = 0.714% < 5.100% (WIN). PR and DB both win; runtime is a known limitatio
 > sticky\_used=0, stage2\_used=0, disturbance\_finalization\_used=0.
 > Audit result: **PASS** (360 cycles across 2 topologies × 9 scenarios × 20 cycles).
 
+> **Metric note:** Clean failure validation reports PR (performance ratio vs path-optimal MLU),
+> DB (disturbance budget), and decision-time metrics for the clean GNN-LPD-DQN method. It is
+> **not** the same normalized-MLU ECMP/OSPF failure table used in the original report, and the
+> two are not directly comparable row-for-row. Every number below is reproducible from
+> `failure_per_cycle.csv`.
+
 Failure validation was executed on Abilene (12 nodes, 30 links) and GEANT (22 nodes, 72 links)
 using the test-split TM cycles (Abilene t=2016–2035; GEANT t=672–691). Nine scenarios were
 evaluated per topology.
@@ -356,7 +368,7 @@ evaluated per topology.
 | Three-link failure | 20 | n/a | n/a | n/a | — | — | 39.9 | 40.8 | 100% | 3 | PASS |
 | Random failure 1 | 20 | 98.34% | 96.00% | 100% | 2.020% | 5.313% | 18.8 | 49.1 | 25% | 0 | PASS |
 | Random failure 2 | 20 | 100.00% | 100.00% | 100% | 0.166% | 0.166% | 13.4 | 29.6 | 10% | 0 | PASS |
-| Spike ×3 | 20 | 99.67% | 96.85% | 100% | 1.169% | 3.042% | 17.0 | 33.2 | 15% | 0 | PASS |
+| Spike ×3 | 20 | 99.67% | 96.85% | 100% | 1.168% | 3.042% | 17.0 | 33.2 | 15% | 0 | PASS |
 | Mixed spike+fail | 20 | 99.12% | 96.07% | 100% | 2.377% | 5.215% | 19.9 | 45.7 | 40% | 0 | PASS |
 | Cap degradation 50% | 20 | 99.41% | 97.10% | 100% | 1.259% | 3.100% | 16.5 | 31.9 | 15% | 0 | PASS |
 
@@ -400,18 +412,26 @@ low across all scenarios (≤ 2.8% mean).
 
 ---
 
-## Section 10 — Clean SDN / Mininet Operational Validation
+## Section 10 — LP-derived SDN-style Operational Simulation
 
 > All operational and failure-validation results in this section are generated by the clean GNN-LPD-DQN method and are not copied from the legacy report.
 
+> **Mode disclosure:** This section is an **LP-derived SDN-style operational simulation**, **not** a
+> live Mininet emulation. Mininet requires a Linux + Open vSwitch environment that was not available
+> on the macOS evaluation machine. All forwarding-plane metrics below are **derived analytically from
+> the clean GNN-LPD-DQN LP solution outputs** using topology-calibrated models — they are not packet-
+> level measurements from a running switch fabric. The script `run_sdn_mininet_clean.py` exposes a
+> `--mode mininet` entry point that produces real packet-level Mininet measurements when run on a
+> Linux/OVS host; those would replace this table with hardware-measured values.
+
 **Script:** `scripts/phase1_5/run_sdn_mininet_clean.py`
 **Output:** `results/gnn_lpd_dqn_selective_db_lp/sdn_mininet_clean/`
-**Mode:** LP-simulation (Mininet not available on macOS evaluation machine; script supports `--mode mininet` on Linux + OVS)
+**Mode:** LP-derived simulation (`--mode simulate`); `--mode mininet` available on Linux + OVS
 **Audit:** PASS — 120 runs, 2 topologies, 6 scenarios, 10 runs per scenario
 
-**SDN metric derivation:** All SDN forwarding-plane metrics are derived from real clean GNN-LPD-DQN LP solution outputs using topology-calibrated models. Throughput = demand delivered at optimal MLU × nominal link speed (65% utilisation baseline). Packet loss = overflow fraction when MLU > 1.0 (observed 0% across all scenarios). RTT = baseline propagation + load-dependent queueing delay. Jitter = path-delay spread across k-disjoint paths. Recovery time = controller decision time (GNN inference + DQN action selection + LP solve + routing install).
+**Metric derivation (analytic, from LP solution):** All forwarding-plane metrics are derived from the clean GNN-LPD-DQN LP solution outputs using topology-calibrated models. Throughput = demand delivered at optimal MLU × nominal link speed (65% utilisation baseline). Packet loss = overflow fraction when MLU > 1.0 (observed 0% across all scenarios). RTT = baseline propagation + load-dependent queueing delay. Jitter = path-delay spread across k-disjoint paths. Recovery time = controller decision time (GNN inference + DQN action selection + LP solve + routing install). These are model-derived estimates, not measured packets. Every value is reproducible from `sdn_per_run.csv`.
 
-### SDN Scenario Definitions
+### Simulation Scenario Definitions
 
 | Scenario | Description |
 |---|---|
@@ -422,7 +442,7 @@ low across all scenarios (≤ 2.8% mean).
 | spike_x3 | Traffic matrix scaled ×3; original caps |
 | mixed_spike_failure | TM scaled ×3 + single link zeroed |
 
-### Table SDN-1. Clean SDN Results — Abilene (N=10 runs per scenario)
+### Table SDN-1. LP-derived SDN-style results — Abilene (N=10 runs per scenario)
 
 | Scenario | N | Throughput | Loss | RTT | Jitter | Recovery ms | Decision ms | Flow rules | Disconn | Audit |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -433,7 +453,7 @@ low across all scenarios (≤ 2.8% mean).
 | Spike ×3 | 10 | 6,500 Mbps | 0.000% | 42.0 ms | 2.5 ms | 43.5 ms | 43.5 ms | 1,043 | 0 | PASS |
 | Spike+Fail | 10 | 6,500 Mbps | 0.000% | 42.0 ms | 2.5 ms | 48.4 ms | 48.4 ms | 1,043 | 0 | PASS |
 
-### Table SDN-2. Clean SDN Results — GEANT (N=10 runs per scenario)
+### Table SDN-2. LP-derived SDN-style results — GEANT (N=10 runs per scenario)
 
 | Scenario | N | Throughput | Loss | RTT | Jitter | Recovery ms | Decision ms | Flow rules | Disconn | Audit |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -444,9 +464,15 @@ low across all scenarios (≤ 2.8% mean).
 | Spike ×3 | 10 | 6,500 Mbps | 0.000% | 38.0 ms | 4.0 ms | 291.8 ms | 291.8 ms | 3,535 | 0 | PASS |
 | Spike+Fail | 10 | 6,500 Mbps | 0.000% | 38.4 ms | 4.0 ms | 279.9 ms | 279.9 ms | 3,535 | 0 | PASS |
 
-**Key findings:** The clean GNN-LPD-DQN controller maintains 6,500 Mbps throughput and zero packet loss across all six scenarios on both Abilene and GEANT. RTT remains at 42.0 ms (Abilene) and 38.0–38.4 ms (GEANT) across all scenarios. Recovery time is 41.5–48.4 ms on Abilene and 277.3–295.9 ms on GEANT. No disconnected ODs on any scenario. Audit PASS on all 120 runs.
+**Key findings (LP-derived):** Under the LP-derived SDN-style simulation, the clean GNN-LPD-DQN controller sustains 6,500 Mbps throughput and zero packet loss across all six scenarios on both Abilene and GEANT. RTT remains at 42.0 ms (Abilene) and 38.0–38.4 ms (GEANT). Recovery time (= controller decision time) is 41.5–48.4 ms on Abilene and 277.3–295.9 ms on GEANT. No disconnected ODs on any scenario. Audit PASS on all 120 runs. These are model-derived estimates; live Mininet measurement is available via `--mode mininet` on a Linux/OVS host.
 
 **Figures:** Throughput, loss, RTT, jitter, recovery time, and decision time figures available in `results/gnn_lpd_dqn_selective_db_lp/sdn_mininet_clean/` (6 PNG files).
+
+**Raw evidence files (every number above is reproducible from these):**
+
+- `sdn_mininet_clean/sdn_per_run.csv` — 120 per-run rows (all metrics + audit flags)
+- `sdn_mininet_clean/sdn_summary.csv` — 12 rows (6 scenarios × 2 topologies)
+- `sdn_mininet_clean/sdn_method_audit.json` — `"audit_result": "PASS"`, `"mode": "simulate"`
 
 ### SDN Method Audit
 
@@ -487,7 +513,7 @@ low across all scenarios (≤ 2.8% mean).
 | Main comparison subset | 3,288 (Abilene, CERNET, GEANT, Sprintlink, Tiscali) |
 | Clean audit result | PASSED — 10/10 blocks |
 | Failure validation result | PASSED — 360 cycles, 2 topologies, 9 scenarios |
-| SDN validation result | PASSED — 120 runs, 2 topologies, 6 scenarios (simulate mode) |
+| SDN validation result | PASSED — 120 runs, 2 topologies, 6 scenarios (LP-derived simulation mode; not live Mininet) |
 | Solver | PuLP with HiGHS preferred / CBC fallback |
 | Zero-shot topologies | Germany50, VtlWavenet2011 |
 | Main comparison topologies | Abilene, CERNET, GEANT, Sprintlink, Tiscali |
@@ -516,37 +542,43 @@ low across all scenarios (≤ 2.8% mean).
 ## Section 12 — Claim Boundary
 
 > The main comparison subset contains five topologies: Abilene, CERNET, GEANT, Sprintlink,
-> and Tiscali, for a total of N = 3,288 evaluation cycles. Tiscali is included in the reported
-> tables and CDFs. A locked FlexDATE reference for Tiscali exists in the audit script
-> (`tiscali: {"PR": 0.999, "DB": 0.0510}`); our Tiscali PR = 100.000% (WIN) and DB = 0.714%
-> (WIN). All five topologies win both PR and DB vs FlexDATE. Tiscali's runtime is a limitation
-> (81.5% full-OD fallback, mean 4,340 ms) which is honestly disclosed.
+> and Tiscali, for a total of N = 3,288 evaluation cycles. Tiscali is included in N = 3,288 and in
+> the CDFs **but is not claimed as a FlexDATE win/loss row, because no source-locked FlexDATE
+> reference row for Tiscali exists in the original report.** The audit-script `tiscali` constant is
+> method-internal configuration, not valid FlexDATE source evidence. Only the four topologies with
+> a source-locked FlexDATE reference — Abilene, CERNET, GEANT, Sprintlink — are claimed as
+> FlexDATE wins, and all four win both PR and DB. Tiscali's own PR = 100.000% and DB = 0.714% are
+> reported as internal results, with runtime (81.5% full-OD fallback, mean 4,340 ms) an honestly
+> disclosed limitation.
 > Full N = 3,976 internal benchmark results are reported separately.
 > The clean method passes the compliance audit and should not be confused with the legacy
 > RandomForest/sticky/finalization artifact.
 > Clean failure-scenario validation (Section 9) confirms the method maintains PR ≥ 95% under
-> link failures, traffic spikes, and capacity degradation on Abilene and GEANT.
-> Clean SDN operational validation (Section 10) confirms 6,500 Mbps throughput, zero packet
-> loss, and zero disconnected ODs across all six scenarios on Abilene and GEANT (audit PASS,
-> LP-simulation mode; Mininet hardware script provided for Linux/OVS).
+> link failures, traffic spikes, and capacity degradation on Abilene and GEANT; it reports PR/DB/
+> decision-time metrics and is not the normalized-MLU ECMP/OSPF failure table of the original report.
+> The LP-derived SDN-style operational simulation (Section 10) reports 6,500 Mbps throughput, zero
+> packet loss, and zero disconnected ODs across all six scenarios on Abilene and GEANT (audit PASS,
+> LP-derived simulation — not live Mininet; a Mininet hardware entry point is provided for Linux/OVS).
 
 ---
 
 ## Final Safe Claims
 
-On the main N = 3,288 comparison subset including Tiscali, the clean GNN-LPD-DQN selected-flow
-DB-budgeted LP method achieves very high PR and low DB across all five topologies. It wins both
-PR and DB on all five topologies including Tiscali (FlexDATE reference confirmed in audit script).
-Tiscali runtime is an honestly disclosed limitation (81.5% fallback, mean 4,340 ms) that does not
-affect PR or DB quality. On the full N = 3,976 internal protocol, the method achieves
+On the main N = 3,288 comparison subset, the clean GNN-LPD-DQN selected-flow DB-budgeted LP
+method achieves very high PR and low DB across all five topologies. On the four FlexDATE-reference
+topologies (Abilene, CERNET, GEANT, Sprintlink) it wins both PR and DB vs FlexDATE. Tiscali is
+included in N = 3,288 and the CDFs but is **not** claimed as a FlexDATE win/loss row, because no
+source-locked FlexDATE reference row for Tiscali exists in the original report; its PR = 100.000%
+and DB = 0.714% are reported as internal results with runtime an honestly disclosed limitation.
+On the full N = 3,976 internal protocol, the method achieves
 **99.743% mean PR**, **0.545% mean DB**, **246.6 ms mean decision time**, and **657.2 ms P95 decision time**.
 Mean decision time is below 500 ms on four of five main comparison topologies; P95 is below 500 ms
 on three of five, with Sprintlink and Tiscali exceeding the threshold due to safety full-OD fallback.
 Under failure scenarios (Section 9), the method maintains PR ≥ 95% on all non-disconnecting
 scenarios (Abilene + GEANT, 9 scenarios, clean audit PASS).
-Under clean SDN operational validation (Section 10), the method delivers 6,500 Mbps throughput,
-0% packet loss, zero disconnected ODs, and RTT of 42 ms (Abilene) / 38–38.4 ms (GEANT)
-across all six scenarios (audit PASS, LP-simulation mode).
+Under the LP-derived SDN-style operational simulation (Section 10), the method delivers 6,500 Mbps
+throughput, 0% packet loss, zero disconnected ODs, and RTT of 42 ms (Abilene) / 38–38.4 ms (GEANT)
+across all six scenarios (audit PASS, LP-derived simulation — not live Mininet).
 
 ---
 
@@ -556,19 +588,26 @@ across all six scenarios (audit PASS, LP-simulation mode).
 |---|---|
 | Main comparison subset row count = 3,288 | ✓ Confirmed (2016+200+672+200+200) |
 | Main comparison subset includes Tiscali | ✓ Confirmed |
-| Table 2 includes Tiscali with FlexDATE reference | ✓ Confirmed — WIN BOTH |
+| Table 2 includes Tiscali row (in N=3,288) | ✓ Confirmed |
+| Table 2 Tiscali FlexDATE PR/DB = N.A., PR/DB Result = n/c | ✓ Confirmed |
+| Table 2 Tiscali Overall = reported / runtime limitation | ✓ Confirmed |
+| No "5/5 WIN BOTH" claim anywhere | ✓ Confirmed — replaced with 4/4 + Tiscali limitation |
+| Tiscali not claimed as FlexDATE win/loss | ✓ Confirmed — no source-locked reference exists |
+| Audit-script `tiscali` constant not cited as FlexDATE evidence | ✓ Confirmed — removed |
 | Table 3 includes Tiscali | ✓ Confirmed |
 | PR/DB/decision-time CDFs include Tiscali | ✓ Confirmed (figures/ directory) |
 | No text says N=3,088 | ✓ Confirmed |
 | No text says N=3088 | ✓ Confirmed |
 | No figure title says N=3,088 | ✓ Confirmed |
 | No text says Tiscali is excluded | ✓ Confirmed |
-| Tiscali FlexDATE reference marked WIN (not N.A.) | ✓ Confirmed — PR 100%>99.9%, DB 0.714%<5.1% |
 | Runtime claim says 4/5 mean <500 ms | ✓ Confirmed |
 | Runtime claim says 3/5 P95 <500 ms | ✓ Confirmed |
 | Full internal N=3,976 table unchanged | ✓ Confirmed |
 | Section 9 failure results from clean rerun (not legacy) | ✓ Confirmed — audit PASS 360 cycles |
-| Section 10 SDN results from clean rerun (not legacy) | ✓ Confirmed — audit PASS 120 runs, 6 scenarios |
+| Section 9 stated as PR/DB metrics, not normalized-MLU ECMP/OSPF table | ✓ Confirmed |
+| Section 10 renamed "LP-derived SDN-style Operational Simulation" | ✓ Confirmed — not claimed as live Mininet |
+| Section 10 results from clean rerun (not legacy) | ✓ Confirmed — audit PASS 120 runs, 6 scenarios |
+| All Section 9 + 10 numbers reproducible from CSVs | ✓ Confirmed — recomputed and matched |
 | Forbidden function names in audit section only | ✓ Confirmed — not in intro/method lock |
 | Table 4b note about max DB outliers | ✓ Confirmed |
 | LP problem-size table included | ✓ Confirmed (Table LP-1 in Section 7) |
