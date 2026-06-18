@@ -45,15 +45,11 @@ ROOT = Path(__file__).resolve().parents[2]
 # ---------------------------------------------------------------------------
 # Paths to locked legacy artifacts (read-only; never write to these paths)
 # ---------------------------------------------------------------------------
-# Primary: the worktree that holds the frozen reward_policy_selector results.
-_LEGACY_WT = Path(
-    "/Users/moahaimentalib/Documents/scientfic_papers/aI_sara_network/"
-    "network_project/.claude/worktrees/tender-goldwasser-80176d"
-)
-LEGACY_DIR = _LEGACY_WT / "results" / "reward_policy_selector_st_lam005"
-
-# Fallback: check current worktree too
-_LOCAL_LEGACY_DIR = ROOT / "results" / "reward_policy_selector_st_lam005"
+# Project-relative location of the frozen legacy reward_policy_selector results
+# (read-only; never written). Optional — present only if the legacy artifacts
+# were copied into this repository.
+LEGACY_DIR = ROOT / "results" / "reward_policy_selector_st_lam005"
+_LOCAL_LEGACY_DIR = LEGACY_DIR
 
 REQUIRED_FILES = [
     "test_policy_per_cycle.csv",

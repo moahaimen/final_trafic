@@ -29,11 +29,7 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 
-_LEGACY_WT = Path(
-    "/Users/moahaimentalib/Documents/scientfic_papers/aI_sara_network/"
-    "network_project/.claude/worktrees/tender-goldwasser-80176d"
-)
-DEFAULT_LEGACY_DIR = _LEGACY_WT / "results" / "reward_policy_selector_st_lam005"
+DEFAULT_LEGACY_DIR = ROOT / "results" / "reward_policy_selector_st_lam005"
 DEFAULT_REPRO_DIR = ROOT / "results" / "legacy_reward_gated_gnn_lpd_report_reproduction"
 
 REQUIRED_LEGACY_FILES = [

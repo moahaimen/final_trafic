@@ -107,19 +107,12 @@ METHOD = "gnn_lpd_dqn_selective_db_lp"
 OUT_ROOT = ROOT / "results" / METHOD
 CONFIG = str(ROOT / "configs" / "phase1_reactive_full.yaml")
 
-_LEGACY_WT = Path(
-    "/Users/moahaimentalib/Documents/scientfic_papers/aI_sara_network/"
-    "network_project/.claude/worktrees/tender-goldwasser-80176d"
-)
+# Optional strict-MCF reference tables (project-relative). When present they
+# supply the path-optimal MLU per (topology, timestep); when absent the loader
+# falls back to the precomputed pathopt_ref cache under the results directory.
 TUNING_REF = ROOT / "results" / "gnn_pr_allwin" / "strict_full_mcf_reference_tuning.csv"
 STUDENT_REF = (
     ROOT / "results" / "phase1_5_incremental" / "lp_distilled_pr_gnn_kpaths8"
-    / "strict_full_mcf_reference_student.csv"
-)
-# Fallback references from the other worktree (read-only, never written)
-_WT_TUNING_REF = _LEGACY_WT / "results" / "gnn_pr_allwin" / "strict_full_mcf_reference_tuning.csv"
-_WT_STUDENT_REF = (
-    _LEGACY_WT / "results" / "phase1_5_incremental" / "lp_distilled_pr_gnn_kpaths8"
     / "strict_full_mcf_reference_student.csv"
 )
 
@@ -324,7 +317,7 @@ def _pathopt_path(topo: str) -> Path:
 
 def load_pathopt(topos: list[str]) -> dict[str, dict[int, float]]:
     ref: dict[str, dict[int, float]] = {t: {} for t in topos}
-    for src in (TUNING_REF, STUDENT_REF, _WT_TUNING_REF, _WT_STUDENT_REF):
+    for src in (TUNING_REF, STUDENT_REF):
         if not Path(src).exists():
             continue
         df = pd.read_csv(src)

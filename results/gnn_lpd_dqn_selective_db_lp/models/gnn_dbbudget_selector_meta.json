@@ -1,5 +1,5 @@
 {
-  "checkpoint": "/Users/moahaimentalib/Documents/scientfic_papers/aI_sara_network/network_project/.claude/worktrees/nervous-napier-e49208/results/gnn_lpd_dqn_selective_db_lp/models/gnn_dbbudget_selector.pt",
+  "checkpoint": "results/gnn_lpd_dqn_selective_db_lp/models/gnn_dbbudget_selector.pt",
   "architecture": {
     "type": "GNNFlowSelector",
     "message_passing": "GraphSAGE-style",
@@ -12,7 +12,7 @@
     "n_params": 72886
   },
   "training": {
-    "label_csv": "/Users/moahaimentalib/Documents/scientfic_papers/aI_sara_network/network_project/.claude/worktrees/nervous-napier-e49208/results/gnn_lpd_dqn_selective_db_lp/labels/oracle_labels.csv",
+    "label_csv": "results/gnn_lpd_dqn_selective_db_lp/labels/oracle_labels.csv",
     "oracle_solver": "full_od_db_budgeted_lp",
     "oracle_function": "solve_selected_path_lp_dbbudget",
     "heuristic_ranking_used_for_labels": false,

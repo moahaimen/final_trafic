@@ -1,5 +1,12 @@
 # Phase-1/Phase-2 TE: Abilene + GEANT (SNDlib)
 
+> **Clean GNN-LPD-DQN method (Phase 1.5) — start here:**
+> For the final clean GNN-LPD-DQN traffic-engineering method, evidence artifacts,
+> and a fresh-clone run guide, see **[README_WINDOWS_RUN.md](README_WINDOWS_RUN.md)**,
+> **[REPRODUCIBILITY.md](REPRODUCIBILITY.md)**, and **[FINAL_REPORT.md](FINAL_REPORT.md)**.
+> First command after cloning: `python scripts/phase1_5/windows_smoke_test.py`
+> (expected output: `READY FOR STUDENT RUN`).
+
 Flow-level Traffic Engineering simulator on SNDlib dynamic traffic matrices.
 
 - Phase-1: reactive TE optimization (no forecasting)
