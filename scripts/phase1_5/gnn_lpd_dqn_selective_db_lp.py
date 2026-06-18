@@ -34,13 +34,14 @@ Usage:
     # Precompute path-opt reference (one-time):
     python scripts/phase1_5/gnn_lpd_dqn_selective_db_lp.py --mode precompute
 
-    # Train GNN-LPD selector then DQN:
+    # Train GNN-LPD selector then DQN (clean DB-budgeted oracle checkpoint):
     python scripts/phase1_5/gnn_lpd_dqn_selective_db_lp.py --mode train \\
-        --gnn_checkpoint results/phase1_5_incremental/lp_distilled_pr_gnn_kpaths8/models/gnn_lp_distilled_selector.pt
+        --gnn_checkpoint results/gnn_lpd_dqn_selective_db_lp/models/gnn_dbbudget_selector.pt
 
-    # Evaluate (requires trained DQN checkpoint + GNN checkpoint):
+    # Evaluate (requires trained DQN checkpoint + clean GNN checkpoint):
     python scripts/phase1_5/gnn_lpd_dqn_selective_db_lp.py --mode eval \\
-        --gnn_checkpoint <path> --dqn_checkpoint results/gnn_lpd_dqn_selective_db_lp/dqn_best.pt
+        --gnn_checkpoint results/gnn_lpd_dqn_selective_db_lp/models/gnn_dbbudget_selector.pt \\
+        --dqn_checkpoint results/gnn_lpd_dqn_selective_db_lp/dqn_best.pt
 """
 
 from __future__ import annotations

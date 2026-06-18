@@ -1,161 +1,144 @@
-# Phase-1/Phase-2 TE: Abilene + GEANT (SNDlib)
+# Clean GNN-LPD-DQN Traffic Engineering
 
-> **Clean GNN-LPD-DQN method (Phase 1.5) — start here:**
-> For the final clean GNN-LPD-DQN traffic-engineering method, evidence artifacts,
-> and a fresh-clone run guide, see **[README_WINDOWS_RUN.md](README_WINDOWS_RUN.md)**,
-> **[REPRODUCIBILITY.md](REPRODUCIBILITY.md)**, and **[FINAL_REPORT.md](FINAL_REPORT.md)**.
-> First command after cloning: `python scripts/phase1_5/windows_smoke_test.py`
-> (expected output: `READY FOR STUDENT RUN`).
+This repository delivers the **final clean GNN-LPD-DQN traffic-engineering method**
+together with its committed evidence artifacts. This is the only method that
+constitutes the final result. The heuristic baselines from the earlier phases
+(Top-K, bottleneck, OSPF/ECMP) and any RandomForest / sticky-gate / Stage-2
+variants are **not** part of the final method — see
+[Background / legacy utilities](#background--legacy-utilities--not-the-final-clean-method).
 
-Flow-level Traffic Engineering simulator on SNDlib dynamic traffic matrices.
+## Method
 
-- Phase-1: reactive TE optimization (no forecasting)
-- Phase-2: proactive TE (predict next TM, optimize on prediction, evaluate on actual TM)
+```
+Traffic matrix + topology
+  -> DB-budgeted LP-distilled GNN-LPD critical-OD selector
+  -> DQN controller chooses K / action / DB budget
+  -> selected critical ODs -> one-stage selected-flow DB-budgeted LP
+  -> noncritical ODs remain on ECMP or previous routing
+  -> capped K escalation if PR/MLU guard fails (K30 -> K40 -> K50)
+  -> full-OD fallback only after the selected-K cap fails
+```
 
-Implemented methods:
+Excluded by design and verified by the compliance audit: heuristic criticality,
+RandomForest gate, sticky-gate reuse, Stage-2 DB LP, disturbance-finalization LP.
+
+## First-run command (Windows)
+
+After cloning, from the repository root:
+
+```bat
+python -m venv .venv && .venv\Scripts\activate && python -m pip install --upgrade pip && pip install -r requirements.txt && python scripts\phase1_5\windows_smoke_test.py
+```
+
+macOS / Linux:
+
+```bash
+python3 -m venv .venv && source .venv/bin/activate && python -m pip install --upgrade pip && pip install -r requirements.txt && python scripts/phase1_5/windows_smoke_test.py
+```
+
+Expected final line:
+
+```
+READY FOR STUDENT RUN
+```
+
+Full Windows instructions: **[README_WINDOWS_RUN.md](README_WINDOWS_RUN.md)**.
+
+## Report files
+
+| File | Description |
+|---|---|
+| [STUDENT_PROFESSOR_FINAL_REPORT.pdf](STUDENT_PROFESSOR_FINAL_REPORT.pdf) | Final report (PDF) |
+| [STUDENT_PROFESSOR_FINAL_REPORT.docx](STUDENT_PROFESSOR_FINAL_REPORT.docx) | Final report (Word) |
+| [FINAL_REPORT.md](FINAL_REPORT.md) | Method summary (Markdown) |
+| [REPRODUCIBILITY.md](REPRODUCIBILITY.md) | Full pipeline + dataset + audit provenance |
+
+## Evidence CSV locations
+
+| Evidence | Path | Rows |
+|---|---|---|
+| Full evaluation | `results/gnn_lpd_dqn_selective_db_lp/final_N3976/per_cycle.csv` | 3,976 |
+| Per-topology summary | `results/gnn_lpd_dqn_selective_db_lp/final_N3976/per_topology_summary.csv` | 8 |
+| Failure validation | `results/gnn_lpd_dqn_selective_db_lp/failure_validation_clean/failure_per_cycle.csv` | 360 |
+| Failure summary | `results/gnn_lpd_dqn_selective_db_lp/failure_validation_clean/failure_summary.csv` | 18 |
+| LP-derived SDN simulation | `results/gnn_lpd_dqn_selective_db_lp/sdn_mininet_clean/sdn_per_run.csv` | 120 |
+| SDN summary | `results/gnn_lpd_dqn_selective_db_lp/sdn_mininet_clean/sdn_summary.csv` | 12 |
+
+Model and label artifacts:
+
+| Artifact | Path |
+|---|---|
+| GNN-LPD selector checkpoint | `results/gnn_lpd_dqn_selective_db_lp/models/gnn_dbbudget_selector.pt` |
+| DQN checkpoint | `results/gnn_lpd_dqn_selective_db_lp/dqn_best.pt` |
+| Oracle labels | `results/gnn_lpd_dqn_selective_db_lp/labels/oracle_labels.csv` |
+| Label provenance | `results/gnn_lpd_dqn_selective_db_lp/labels/label_provenance.json` |
+
+## Audit command
+
+```bash
+python scripts/phase1_5/audit_gnn_lpd_dqn_clean_method.py --eval_dir results/gnn_lpd_dqn_selective_db_lp/final_N3976
+```
+
+Expected: `CLEAN METHOD AUDIT PASSED` — per-cycle rows = 3976, `criticality_backend = gnn_lpd`
+in every row, and `heuristic_used = random_forest_gate_used = sticky_gate_used = stage2_used =
+disturbance_finalization_used = 0`.
+
+## Clean-method source files
+
+| File | Role |
+|---|---|
+| `scripts/phase1_5/gnn_lpd_dqn_selective_db_lp.py` | Main method (selector + DQN + selected-flow DB-budgeted LP) |
+| `scripts/phase1_5/build_dbbudget_oracle_labels.py` | DB-budgeted LP oracle label generation |
+| `scripts/phase1_5/train_gnn_dbbudget_selector.py` | GNN-LPD selector training |
+| `scripts/phase1_5/gnn_lp_inference.py` | GNN-LPD inference |
+| `scripts/phase1_5/audit_gnn_lpd_dqn_clean_method.py` | Compliance audit |
+| `scripts/phase1_5/run_failure_validation_clean.py` | Clean failure-scenario validation |
+| `scripts/phase1_5/run_sdn_mininet_clean.py` | LP-derived SDN-style simulation (`--mode mininet` for Linux/OVS) |
+| `scripts/phase1_5/windows_smoke_test.py` | Fresh-clone smoke test |
+| `te/lp_solver.py` | Path LP solvers (incl. selected-flow DB-budgeted LP) |
+
+---
+
+## Background / legacy utilities — not the final clean method
+
+> **The methods in this section are NOT part of the final clean GNN-LPD-DQN
+> result.** They are earlier Phase-1/Phase-2 baselines and exploratory utilities,
+> retained only for context and historical reproduction. Do **not** treat Top-K
+> heuristic, bottleneck heuristic, OSPF/ECMP, RandomForest gating, sticky reuse,
+> or Stage-2 LP as part of the final method — the final method explicitly
+> excludes all of them (enforced by the compliance audit above).
+
+The original repository also contains a flow-level TE simulator over SNDlib
+dynamic traffic matrices with these earlier baselines:
+
 - `M0` OSPF shortest path
 - `M1` ECMP over equal-cost shortest candidate paths
 - `M2` LP-optimal full MCF (all ODs, min MLU)
-- `M3` Top-K demand heuristic + LP (selected ODs), ECMP for others
-- `M4` Bottleneck-contribution heuristic + LP (selected ODs), ECMP for others
-- `M5` RL selector + LP (optional, checkpoint-based)
+- `M3` Top-K demand heuristic + LP (selected ODs), ECMP for others — *legacy heuristic*
+- `M4` Bottleneck-contribution heuristic + LP (selected ODs), ECMP for others — *legacy heuristic*
+- `M5` RL selector + LP (optional, checkpoint-based) — *legacy*
 
-## Repo Layout
+These were used in Phase-1 (reactive TE) and Phase-2 (proactive TE with TM
+prediction). They are independent of the clean GNN-LPD-DQN method and are kept
+for reference only.
 
-```text
-data/
-scripts/
-  download_sndlib.sh
-  prepare_data.py
-  run_demo.sh
-  run_phase2_demo.sh
-te/
-  parser_sndlib.py
-  paths.py
-  simulator.py
-  baselines.py
-  lp_solver.py
-  disturbance.py
-phase2/
-  predictors.py
-rl/
-  policy.py
-  train_rl.py
-eval/
-  run_all.py
-  run_phase2.py
-  plots.py
-  make_report.py
-configs/
-  abilene.yaml
-  geant.yaml
-results/
-```
-
-## Install
+### Legacy Phase-1 / Phase-2 demos (reference only)
 
 ```bash
-python -m pip install -r requirements.txt
-```
-
-## Phase-1 Quick Demo
-
-```bash
+# Phase-1 reactive baselines demo
 bash scripts/run_demo.sh
-```
 
-Useful overrides:
-
-```bash
-MAX_STEPS=300 bash scripts/run_demo.sh
-RUN_LP_OPTIMAL=1 MAX_STEPS=120 bash scripts/run_demo.sh
-```
-
-## Phase-2 Quick Demo (Proactive)
-
-```bash
+# Phase-2 proactive baselines demo
 bash scripts/run_phase2_demo.sh
 ```
 
-Useful overrides:
+Legacy full runs (`eval.run_all`, `eval.run_phase2`), dataset download
+(`scripts/download_sndlib.sh`), and preparation (`scripts/prepare_data.py`)
+remain available for historical reproduction but are not required for, and not
+part of, the final clean method.
 
-```bash
-MAX_STEPS=300 PREDICTOR=ar_ridge PREDICTOR_WINDOW=6 bash scripts/run_phase2_demo.sh
-RUN_LP_OPTIMAL=1 MAX_STEPS=180 bash scripts/run_phase2_demo.sh
-```
-
-## Full Phase-1 Run (longer)
-
-```bash
-# 1) Download datasets
-bash scripts/download_sndlib.sh --data_dir data
-
-# 2) Prepare processed files
-python scripts/prepare_data.py --data_dir data --dataset all --max_steps 3000
-
-# 3) Evaluate Phase-1 methods
-python -m eval.run_all \
-  --config configs/abilene.yaml \
-  --config configs/geant.yaml \
-  --output_dir results/full_phase1 \
-  --methods ospf,ecmp,topk,bottleneck,lp_optimal
-```
-
-## Full Phase-2 Run (proactive)
-
-```bash
-python -m eval.run_phase2 \
-  --config configs/abilene.yaml \
-  --config configs/geant.yaml \
-  --output_dir results/full_phase2 \
-  --methods ospf,ecmp,topk_pred,bottleneck_pred,lp_optimal_pred \
-  --predictor ar_ridge \
-  --predictor_window 6 \
-  --predictor_alpha 0.01
-```
-
-Optional proactive RL-selection+LP:
-
-```bash
-python -m eval.run_phase2 \
-  --config configs/abilene.yaml \
-  --config configs/geant.yaml \
-  --output_dir results/full_phase2_rl \
-  --methods ospf,ecmp,topk_pred,bottleneck_pred,rl_lp_pred \
-  --predictor ar_ridge \
-  --rl_checkpoint results/rl/abilene/policy.pt
-```
-
-## Optional RL Training (selector)
-
-```bash
-python rl/train_rl.py --config configs/abilene.yaml --epochs 5 --max_steps 1000
-```
-
-Checkpoint output:
-- `results/rl/abilene/policy.pt`
-- `results/rl/abilene/train_history.json`
-
-## Outputs
-
-Phase-1 run output directory (example `results/demo`):
-- `summary_all.csv`
-- `timeseries_all.csv`
-- `report.md`
-
-Phase-2 run output directory (example `results/phase2_demo`):
-- `summary_all.csv`
-- `timeseries_all.csv`
-- `report.md`
-- `<dataset>/summary.csv`
-- `<dataset>/timeseries.csv`
-- `<dataset>/prediction_timeseries.csv`
-- `<dataset>/<dataset>_mlu_over_time.png`
-- `<dataset>/<dataset>_disturbance_over_time.png`
-
-## Notes
+### Legacy notes
 
 - Chronological split is always 70/15/15 with no shuffling.
-- Reported metrics are computed on the test split.
+- Reported legacy metrics are computed on the test split.
 - Deterministic seed is logged in `run_metadata.json`.
-- If capacities are missing/invalid, parser applies a documented normalization rule and logs it.
